@@ -1,0 +1,24 @@
+{
+  "chats": {
+    "chatroom-0": {
+      "title": "test chat room"
+    }
+  },
+  "members": {
+    "chatroom-0": {
+      "Hyewon": true,
+      "Chan": true,
+      "Victoria": true,
+      "Ryan": true
+    }
+  },
+  "messages": {
+    "chatroom-0": {
+      "message-0": {
+        "username": "Hyewon",
+        "msg": "Test msg",
+        "timestamp": 1459361875337
+      }
+    }
+  }
+}
