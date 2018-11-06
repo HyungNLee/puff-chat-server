@@ -34,6 +34,15 @@ io.on('connection', function(socket){
     index = snapshot.val();
   });
 
+  let messages = {};
+  db.ref("messages/chatroom-0").orderByChild("timestamp").on("child_added", function(snapshot) {
+    messages[snapshot.key] = snapshot.val();
+  });
+
+  socket.on('previousMessages', function(msg) {
+    io.emit('previousMessages', messages);
+  });
+
   socket.on('message', function(msg){
     console.log(msg);
     db.ref("members/chatroom-0/"+msg.username).on("value", function(snapshot) {
