@@ -28,14 +28,20 @@ io.on('connection', function(socket){
     console.log('user disconnected');
   });
 
+  let selectedChat = 0;
+
+  socket.on('selectChatroom', index => {
+    selectedChat = index;
+  });
+
   //get message id
   let index = 0;
-  db.ref("chats/chatroom-0/msg-index").on("value", function(snapshot) {
+  db.ref(`chats/chatroom-${selectedChat}/msg-index`).on("value", function(snapshot) {
     index = snapshot.val();
   });
 
   let messages = {};
-  db.ref("messages/chatroom-0").orderByChild("timestamp").on("child_added", function(snapshot) {
+  db.ref(`messages/chatroom-${selectedChat}`).orderByChild("timestamp").on("child_added", function(snapshot) {
     messages[snapshot.key] = snapshot.val();
   });
 
@@ -45,28 +51,28 @@ io.on('connection', function(socket){
 
   socket.on('message', function(msg){
     console.log(msg);
-    db.ref("members/chatroom-0/"+msg.username).on("value", function(snapshot) {
+    db.ref(`members/chatroom-${selectedChat}/${msg.username}`).on("value", function(snapshot) {
       //if user exists in this chat room,
       if (snapshot.val() !== null && snapshot.val() === true) {
         console.log(snapshot.val());
       }
       //if user does not exist in this chat rooom or does not exist in the database,
       else {
-        db.ref("members/chatroom-0").child(msg.username).set(true);
+        db.ref(`members/chatroom-${selectedChat}`).child(msg.username).set(true);
       }
     }, function (errorObject) {
        console.log("The read failed: " + errorObject.code);
     });
 
     let messageId = "message-"+index;
-    db.ref("messages/chatroom-0").child(messageId).set({
+    db.ref(`messages/chatroom-${selectedChat}`).child(messageId).set({
       "msg": msg.msg,
       "timestamp": Date.now(),
       "username": msg.username,
     });
 
     //increase message index
-    db.ref("chats/chatroom-0/msg-index").set(++index);
+    db.ref(`chats/chatroom-${selectedChat}/msg-index`).set(++index);
     io.emit('message', { username: msg.username, msg: msg.msg } );
   });
 });
