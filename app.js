@@ -65,15 +65,16 @@ io.on('connection', function(socket){
     });
 
     let messageId = "message-"+index;
+    let currentTime = Date.now();
     db.ref(`messages/chatroom-${selectedChat}`).child(messageId).set({
       "msg": msg.msg,
-      "timestamp": Date.now(),
+      "timestamp": currentTime,
       "username": msg.username,
     });
 
     //increase message index
     db.ref(`chats/chatroom-${selectedChat}/msg-index`).set(++index);
-    io.emit('message', { username: msg.username, msg: msg.msg } );
+    io.emit('message', { username: msg.username, msg: msg.msg, timestamp: currentTime } );
   });
 });
 
