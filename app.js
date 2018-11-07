@@ -28,14 +28,32 @@ io.on('connection', function(socket){
     console.log('user disconnected');
   });
 
+  let getChatroomsListPromise = new Promise((resolve, reject) => {
+    let list = [];
+    let returnedObject = {};
+    db.ref(`chats`).on("value", snapshot => {
+      returnedObject = snapshot.val();
+      if (returnedObject !== null) {
+        Object.keys(returnedObject).forEach(key => {
+          list.push({ title: returnedObject[key].title, id: key });
+        });
+        resolve(list);
+      }
+      else {
+        reject(new Error("Failed to get chatrooms list."));
+      }
+    });
+
+  });
+
   //get message id
   let getMsgIndexPromise = function(index) {
     return new Promise((resolve, reject) => {
       let msgId = 0;
-      db.ref(`chats/chatroom-${index}/msg-index`).on("value", snapshot => {
+      db.ref(`chats/${index}/msg-index`).on("value", snapshot => {
         msgId = snapshot.val();
       });
-      db.ref(`chats/chatroom-${index}`).on("value", function(snapshot) {
+      db.ref(`chats/${index}`).on("value", function(snapshot) {
         if (snapshot.val() !== null)
           resolve(msgId);
         else 
@@ -47,10 +65,10 @@ io.on('connection', function(socket){
   let previousMessagesPromise = function(index) {
     return new Promise((resolve, reject) => {
       let messages = {};
-      db.ref(`messages/chatroom-${index}`).orderByChild("timestamp").on("child_added", function(snapshot) {
+      db.ref(`messages/${index}`).orderByChild("timestamp").on("child_added", function(snapshot) {
         messages[snapshot.key] = snapshot.val();
       });
-      db.ref(`chats/chatroom-${index}`).on("value", function(snapshot) {
+      db.ref(`chats/${index}`).on("value", function(snapshot) {
         if (snapshot.val() !== null)
           resolve(messages);
         else 
@@ -58,6 +76,12 @@ io.on('connection', function(socket){
       });
     });
   }
+
+  socket.on('chatroomsList', function(msg) {
+    getChatroomsListPromise.then(function(list) {
+      io.emit('chatroomsList', list);
+    });
+  });
 
   socket.on('previousMessages', function(index) {
     previousMessagesPromise(index).then(messages => {
@@ -67,30 +91,30 @@ io.on('connection', function(socket){
 
   socket.on('message', function(msg){
     console.log(msg);
-    getMsgIndexPromise(msg.chatroomIndex).then(function(msgId) {
-      db.ref(`members/chatroom-${msg.chatroomIndex}/${msg.username}`).on("value", function(snapshot) {
+    getMsgIndexPromise(msg.selectedChatroom).then(function(msgId) {
+      db.ref(`members/${msg.selectedChatroom}/${msg.username}`).on("value", function(snapshot) {
         //if user exists in this chat room,
         if (snapshot.val() !== null && snapshot.val() === true) {
           console.log(snapshot.val());
         }
         //if user does not exist in this chat rooom or does not exist in the database,
         else {
-          db.ref(`members/chatroom-${msg.chatroomIndex}`).child(msg.username).set(true);
+          db.ref(`members/${msg.selectedChatroom}`).child(msg.username).set(true);
         }
       }, function (errorObject) {
          console.log("The read failed: " + errorObject.code);
       });
   
       let currentTime = Date.now();
-      db.ref(`messages/chatroom-${msg.chatroomIndex}`).child(`message-${msgId}`).set({
+      db.ref(`messages/${msg.selectedChatroom}`).child(`message-${msgId}`).set({
         "msg": msg.msg,
         "timestamp": currentTime,
         "username": msg.username,
       });
   
       //increase message index
-      db.ref(`chats/chatroom-${msg.chatroomIndex}/msg-index`).set(++msgId);
-      io.emit('message', { username: msg.username, msg: msg.msg, timestamp: currentTime, chatroomIndex: msg.chatroomIndex } );
+      db.ref(`chats/${msg.selectedChatroom}/msg-index`).set(++msgId);
+      io.emit('message', { username: msg.username, msg: msg.msg, timestamp: currentTime, selectedChatroom: msg.selectedChatroom } );
     });
   });
 });
