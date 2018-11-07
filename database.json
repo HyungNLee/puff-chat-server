@@ -1,6 +1,7 @@
 {
   "chats": {
     "chatroom-0": {
+      "msg-index": 1,
       "title": "test chat room"
     }
   },
