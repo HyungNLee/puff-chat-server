@@ -64,13 +64,14 @@ io.on('connection', function(socket){
 
   let previousMessagesPromise = function(index) {
     return new Promise((resolve, reject) => {
-      let messages = {};
-      db.ref(`messages/${index}`).orderByChild("timestamp").on("child_added", function(snapshot) {
-        messages[snapshot.key] = snapshot.val();
-      });
       db.ref(`chats/${index}`).on("value", function(snapshot) {
-        if (snapshot.val() !== null)
+        if (snapshot.val() !== null) {
+          let messages = {};
+          db.ref(`messages/${index}`).orderByChild("timestamp").on("child_added", function(snapshot) {
+            messages[snapshot.key] = snapshot.val();
+          });
           resolve(messages);
+        }
         else 
           reject(new Error("Failed to get previous messages."));
       });
