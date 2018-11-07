@@ -118,6 +118,12 @@ io.on('connection', function(socket){
       io.emit('message', { username: msg.username, msg: msg.msg, timestamp: currentTime, selectedChatroom: msg.selectedChatroom } );
     });
   });
+
+  socket.on('checkout', function(msg) {
+    console.log(msg.checkoutUsername);
+    db.ref(`members/${msg.selectedChatroom}`).child(msg.checkoutUsername).remove();
+    db.ref(`members/${msg.selectedChatroom}`).child(msg.checkinUsername).set(true);
+  });
 });
 
 http.listen(8988, function(){
