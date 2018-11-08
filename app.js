@@ -100,7 +100,7 @@ io.on('connection', function(socket){
         }
         //if user does not exist in this chat rooom or does not exist in the database,
         else {
-          db.ref(`members/${msg.selectedChatroom}`).child(msg.username).set(true);
+          db.ref(`members/${msg.selectedChatroom}`).child(msg.userUID).set(msg.username);
         }
       }, function (errorObject) {
          console.log("The read failed: " + errorObject.code);
