@@ -7,10 +7,7 @@
   },
   "members": {
     "chatroom-0": {
-      "Hyewon": true,
-      "Chan": true,
-      "Victoria": true,
-      "Ryan": true
+      "yO6wjrFvyLYwtwEAFDxc2yRvQnG3": "Hyewon"
     }
   },
   "messages": {
@@ -18,7 +15,8 @@
       "message-0": {
         "username": "Hyewon",
         "msg": "Test msg",
-        "timestamp": 1459361875337
+        "timestamp": 1459361875337,
+        "uid": "yO6wjrFvyLYwtwEAFDxc2yRvQnG3"
       }
     }
   }
