@@ -152,6 +152,13 @@ io.on('connection', function(socket){
       }
     });
   });
+
+  socket.on('getMemberCount', function(msg) {
+    db.ref(`members/${msg}`).once("value").then(snapshot => {
+      let count = Object.keys(snapshot.val()).length;
+      io.emit('getMemberCount', { chatroomId: msg, memberCount: count } );
+    });
+  })
 });
 
 http.listen(8988, function(){
