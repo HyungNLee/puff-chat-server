@@ -64,13 +64,14 @@ io.on('connection', function(socket){
 
   let previousMessagesPromise = function(index) {
     return new Promise((resolve, reject) => {
-      let messages = {};
-      db.ref(`messages/${index}`).orderByChild("timestamp").on("child_added", function(snapshot) {
-        messages[snapshot.key] = snapshot.val();
-      });
       db.ref(`chats/${index}`).on("value", function(snapshot) {
-        if (snapshot.val() !== null)
+        if (snapshot.val() !== null) {
+          let messages = {};
+          db.ref(`messages/${index}`).orderByChild("timestamp").on("child_added", function(snapshot) {
+            messages[snapshot.key] = snapshot.val();
+          });
           resolve(messages);
+        }
         else 
           reject(new Error("Failed to get previous messages."));
       });
@@ -116,6 +117,21 @@ io.on('connection', function(socket){
       db.ref(`chats/${msg.selectedChatroom}/msg-index`).set(++msgId);
       io.emit('message', { username: msg.username, msg: msg.msg, timestamp: currentTime, selectedChatroom: msg.selectedChatroom } );
     });
+  });
+
+  socket.on('checkout', function(msg) {
+    db.ref(`members/${msg.selectedChatroom}`).child(msg.checkoutUsername).remove();
+    db.ref(`members/${msg.selectedChatroom}`).child(msg.checkinUsername).set(true);
+  });
+
+  socket.on('logout', function(msg) {
+    db.ref(`members/${msg.selectedChatroom}`).child(msg.checkoutUsername).remove();
+  });
+
+  socket.on('checkin', function(msg) {
+    console.log(msg.checkinUsername);
+    console.log(msg.selectedChatroom);
+    db.ref(`members/${msg.selectedChatroom}`).child(msg.checkinUsername).set(true);
   });
 });
 
