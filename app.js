@@ -120,8 +120,17 @@ io.on('connection', function(socket){
   });
 
   socket.on('checkout', function(msg) {
-    console.log(msg.checkoutUsername);
     db.ref(`members/${msg.selectedChatroom}`).child(msg.checkoutUsername).remove();
+    db.ref(`members/${msg.selectedChatroom}`).child(msg.checkinUsername).set(true);
+  });
+
+  socket.on('logout', function(msg) {
+    db.ref(`members/${msg.selectedChatroom}`).child(msg.checkoutUsername).remove();
+  });
+
+  socket.on('checkin', function(msg) {
+    console.log(msg.checkinUsername);
+    console.log(msg.selectedChatroom);
     db.ref(`members/${msg.selectedChatroom}`).child(msg.checkinUsername).set(true);
   });
 });
