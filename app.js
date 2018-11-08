@@ -119,19 +119,37 @@ io.on('connection', function(socket){
     });
   });
 
-  socket.on('checkout', function(msg) {
-    db.ref(`members/${msg.selectedChatroom}`).child(msg.checkoutUsername).remove();
-    db.ref(`members/${msg.selectedChatroom}`).child(msg.checkinUsername).set(true);
+  socket.on('updateUsername', function(msg) {
+    db.ref(`members`).once("value").then(snapshot => {
+      Object.keys(snapshot.val()).forEach(chatroom => {
+        db.ref(`members/${chatroom}/${msg.userUID}`).set(msg.newUsername);
+      });
+    });
+    db.ref(`messages`).once("value").then(snapshot => {
+      Object.keys(snapshot.val()).forEach(chatroom => {
+        db.ref(`messages/${chatroom}`).orderByChild("uid").equalTo(`${msg.userUID}`).on("value", snapshot => {
+          if (snapshot.val() !== null && snapshot.val() !== undefined) {
+            Object.keys(snapshot.val()).forEach(message => {
+              console.log(chatroom);
+              console.log(message);
+              db.ref(`messages/${chatroom}/${message}/username`).set(msg.newUsername);
+            });
+          }
+        });
+      });
+    });
   });
 
-  socket.on('logout', function(msg) {
-    db.ref(`members/${msg.selectedChatroom}`).child(msg.checkoutUsername).remove();
-  });
+  // socket.on('logout', function(msg) {
+  //   db.ref(`members/${msg.selectedChatroom}`).child(msg.checkoutUsername).remove();
+  // });
 
   socket.on('checkin', function(msg) {
-    console.log(msg.checkinUsername);
-    console.log(msg.selectedChatroom);
-    db.ref(`members/${msg.selectedChatroom}`).child(msg.checkinUsername).set(true);
+    db.ref(`members/${msg.selectedChatroom}/${msg.checkinUID}`).once("value").then(snapshot => {
+      if (snapshot.exists() === false) {
+        db.ref(`members/${msg.selectedChatroom}/${msg.checkinUID}`).set(msg.checkinUsername);
+      }
+    });
   });
 });
 
